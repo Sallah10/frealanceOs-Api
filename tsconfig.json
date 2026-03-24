@@ -18,7 +18,8 @@
     "noFallthroughCasesInSwitch": true,
     "removeComments": true,
     "sourceMap": true,
-    "incremental": true
+    "incremental": true,
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "prisma"]

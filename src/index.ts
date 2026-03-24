@@ -1,7 +1,7 @@
 // src/index.ts
-import { app } from "./server.js";
-import { env } from "./config/env.js";
-import { prisma } from "./config/database.js";
+import { app } from "./server";
+import { env } from "./config/env";
+import { prisma } from "./config/database";
 
 const PORT = env.PORT;
 

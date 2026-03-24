@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const proposal_controller_1 = require("../controllers/proposal.controller");
+const auth_1 = require("../middleware/auth");
+const validation_1 = require("../middleware/validation");
+const proposal_validator_1 = require("../validators/proposal.validator");
+const router = (0, express_1.Router)();
+const proposalController = new proposal_controller_1.ProposalController();
+router.use(auth_1.authenticate);
+router.get("/", proposalController.findAll);
+router.get("/:id", proposalController.findOne);
+router.post("/", (0, validation_1.validate)(proposal_validator_1.createProposalSchema), proposalController.create);
+router.put("/:id", (0, validation_1.validate)(proposal_validator_1.updateProposalSchema), proposalController.update);
+router.delete("/:id", proposalController.delete);
+router.post("/:id/send", proposalController.send);
+router.post("/:id/accept", proposalController.accept);
+router.post("/:id/reject", proposalController.reject);
+exports.default = router;
+//# sourceMappingURL=proposals.js.map

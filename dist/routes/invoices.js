@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const invoice_controller_1 = require("../controllers/invoice.controller");
+const auth_1 = require("../middleware/auth");
+const validation_1 = require("../middleware/validation");
+const invoice_validator_1 = require("../validators/invoice.validator");
+const router = (0, express_1.Router)();
+const invoiceController = new invoice_controller_1.InvoiceController();
+router.use(auth_1.authenticate);
+router.get('/', invoiceController.findAll);
+router.get('/:id', invoiceController.findOne);
+router.post('/', (0, validation_1.validate)(invoice_validator_1.createInvoiceSchema), invoiceController.create);
+router.put('/:id', (0, validation_1.validate)(invoice_validator_1.updateInvoiceSchema), invoiceController.update);
+router.delete('/:id', invoiceController.delete);
+router.post('/:id/send', invoiceController.send);
+router.post('/:id/mark-paid', invoiceController.markAsPaid);
+router.post('/:id/payment-link', invoiceController.generatePaymentLink);
+exports.default = router;
+//# sourceMappingURL=invoices.js.map
