@@ -18,6 +18,8 @@ model User {
   avatar           String?
   timezone         String?   @default("Africa/Lagos")
   raenestAccountId String?
+  notificationPrefs Json      @default("{\"invoicePaid\":true,\"paymentLinkClicked\":true,\"deadlineApproaching\":true,\"proposalResponse\":true}")
+  deletedAt        DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

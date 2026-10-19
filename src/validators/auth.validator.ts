@@ -32,7 +32,34 @@ export const updatePasswordSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number'),
 });
 
+export const notificationPrefsSchema = z.object({
+  invoicePaid: z.boolean().optional(),
+  paymentLinkClicked: z.boolean().optional(),
+  deadlineApproaching: z.boolean().optional(),
+  proposalResponse: z.boolean().optional(),
+});
+
+export const updateNotificationPrefsSchema = notificationPrefsSchema.partial();
+
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Password is required'),
+  confirm: z.literal('DELETE', {
+    errorMap: () => ({ message: 'Type DELETE to confirm account deletion' }),
+  }),
+});
+
+export const DEFAULT_NOTIFICATION_PREFS = {
+  invoicePaid: true,
+  paymentLinkClicked: true,
+  deadlineApproaching: true,
+  proposalResponse: true,
+};
+
+export type NotificationPrefs = z.infer<typeof notificationPrefsSchema>;
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;
+export type UpdateNotificationPrefsInput = z.infer<typeof updateNotificationPrefsSchema>;
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;

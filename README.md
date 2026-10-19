@@ -183,6 +183,10 @@ Every response follows:
 | `POST` | `/auth/register` | ❌   | Create account      |
 | `POST` | `/auth/login`    | ❌   | Login → returns JWT |
 | `GET`  | `/auth/me`       | ✅   | Get current user    |
+| `PUT`  | `/auth/profile`  | ✅   | Update profile      |
+| `PUT`  | `/auth/password` | ✅   | Change password     |
+| `PUT`  | `/auth/notifications` | ✅ | Update notification prefs |
+| `DELETE` | `/auth/account` | ✅ | Soft-delete account (password + `DELETE` confirm) |
 
 ### Clients
 
@@ -241,6 +245,12 @@ Every response follows:
 | ------ | --------------------- | ---- | --------------------------------------- |
 | `GET`  | `/dashboard/stats`    | ✅   | All KPIs - earnings, projects, invoices |
 | `GET`  | `/dashboard/earnings` | ✅   | Chart data (`?period=monthly\|weekly`)  |
+
+### Notifications
+
+| Method | Endpoint          | Auth | Description                                        |
+| ------ | ----------------- | ---- | -------------------------------------------------- |
+| `GET`  | `/notifications`  | ✅   | Derived feed (overdue, deadlines, proposals, paid) |
 | `GET`  | `/dashboard/activity` | ✅   | Recent activity feed                    |
 
 ---

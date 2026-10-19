@@ -205,6 +205,60 @@ Get the currently authenticated user's profile.
 
 ---
 
+#### `PUT /auth/notifications`
+
+Update the current user's notification preferences. Send only the keys you want to change - each is a boolean. Missing keys keep their current value.
+
+**🔒 Authentication required.**
+
+**Request body:**
+
+```json
+{ "invoicePaid": false, "deadlineApproaching": true }
+```
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "notificationPrefs": {
+      "invoicePaid": false,
+      "paymentLinkClicked": true,
+      "deadlineApproaching": true,
+      "proposalResponse": true
+    }
+  }
+}
+```
+
+> These preferences gate the derived feed at `GET /notifications`.
+
+---
+
+#### `DELETE /auth/account`
+
+Soft-delete the current user's account. Requires the account password and a literal `DELETE` confirmation to prevent accidents.
+
+**🔒 Authentication required.**
+
+**Request body:**
+
+```json
+{ "password": "your-password", "confirm": "DELETE" }
+```
+
+**Response `200`:**
+
+```json
+{ "success": true, "data": { "message": "Account deleted" } }
+```
+
+> This is a **soft delete**: the user row is stamped with `deletedAt` and the account can no longer authenticate (existing JWTs are rejected too), but clients, projects and invoices are retained for your records. Re-registering the same email is possible only after the record is removed by an admin - the unique email constraint still applies. Returns `400` if the password is wrong or `confirm` is not exactly `DELETE`.
+
+---
+
 ### Clients
 
 ---
@@ -748,6 +802,57 @@ Recent activity feed - last 20 events across invoices, projects, clients, and mi
 ```
 
 **Activity type values:** `invoice_paid` · `invoice_sent` · `invoice_draft` · `invoice_overdue` · `project_created` · `client_added` · `milestone_completed`
+
+---
+
+### Notifications
+
+---
+
+#### `GET /notifications`
+
+Returns the notification feed for the top-bar bell. Nothing is stored as its own table - the feed is **derived on demand** from invoices, projects and proposals, and filtered by the user's saved `notificationPrefs`.
+
+**🔒 Authentication required.**
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "notifications": [
+      {
+        "id": "overdue_clx...",
+        "type": "invoice_overdue",
+        "title": "Invoice INV-2026-003 is overdue",
+        "description": "Bright Media - 4 days past due (USD 6,500).",
+        "href": "/invoices/clx...",
+        "createdAt": "2026-02-15T00:00:00.000Z",
+        "read": false
+      }
+    ],
+    "unreadCount": 3,
+    "prefs": {
+      "invoicePaid": true,
+      "paymentLinkClicked": true,
+      "deadlineApproaching": true,
+      "proposalResponse": true
+    }
+  }
+}
+```
+
+**Sources for each `type`:**
+
+| Type                   | Derived from                                                    | `read`  |
+| ---------------------- | --------------------------------------------------------------- | ------- |
+| `invoice_paid`         | invoices with `status: paid` (gated by `invoicePaid`)           | `false` |
+| `invoice_overdue`      | sent/overdue invoices past `dueDate`                            | `false` |
+| `deadline_approaching` | planning/active projects due within 3 days (gated by `deadlineApproaching`) | `false` |
+| `proposal_response`    | accepted/rejected proposals (gated by `proposalResponse`)       | `true` when accepted |
+
+> `paymentLinkClicked` is stored as a preference but has no data source yet (Raenest click tracking is not wired up), so it currently gates nothing.
 
 ---
 

@@ -9,6 +9,8 @@ import {
   loginSchema,
   updateProfileSchema,
   updatePasswordSchema,
+  updateNotificationPrefsSchema,
+  deleteAccountSchema,
 } from '../validators/auth.validator';
 
 const router = Router();
@@ -19,5 +21,17 @@ router.post('/login', authLimiter, validate(loginSchema), authController.login);
 router.get('/me', authenticate, authController.getMe);
 router.put('/profile', authenticate, validate(updateProfileSchema), authController.updateProfile);
 router.put('/password', authenticate, validate(updatePasswordSchema), authController.updatePassword);
+router.put(
+  '/notifications',
+  authenticate,
+  validate(updateNotificationPrefsSchema),
+  authController.updateNotificationPrefs
+);
+router.delete(
+  '/account',
+  authenticate,
+  validate(deleteAccountSchema),
+  authController.deleteAccount
+);
 
 export default router;
