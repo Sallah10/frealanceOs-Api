@@ -81,6 +81,13 @@ export class ProposalService {
       throw new Error('Only draft proposals can be edited');
     }
 
+    if (data.clientId) {
+      const client = await prisma.client.findFirst({
+        where: { id: data.clientId, userId },
+      });
+      if (!client) throw new Error('Client not found');
+    }
+
     return prisma.proposal.update({
       where: { id },
       data,

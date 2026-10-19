@@ -92,6 +92,13 @@ export class ProjectService {
       throw new Error('Project not found');
     }
 
+    if (data.clientId) {
+      const client = await prisma.client.findFirst({
+        where: { id: data.clientId, userId },
+      });
+      if (!client) throw new Error('Client not found');
+    }
+
     return prisma.project.update({
       where: { id },
       data,

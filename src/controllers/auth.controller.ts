@@ -62,4 +62,42 @@ export class AuthController {
       }
     }
   }
+
+  async updateProfile(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const user = await authService.updateProfile(req.userId!, req.body);
+      res.status(200).json({
+        success: true,
+        data: user,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({
+          success: false,
+          error: error.message,
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async updatePassword(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      await authService.updatePassword(req.userId!, req.body);
+      res.status(200).json({
+        success: true,
+        data: { message: 'Password updated' },
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({
+          success: false,
+          error: error.message,
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
 }

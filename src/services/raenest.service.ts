@@ -5,10 +5,9 @@ export class RaenestService {
     amount: number,
     currency: string,
   ): Promise<string> {
-    // TODO: Replace with actual Raenest API integration
-    // This is a placeholder for the hackathon
-
-    // Mock implementation - in production,  Raenest API would be called here
+    // TODO: Replace with the real Raenest API call once credentials exist.
+    // Until then this only builds a link-shaped URL for the UI to open and
+    // copy - it does not resolve to a working checkout yet.
     const paymentLink = `https://pay.raenest.com/freelanceos/${invoiceId}?amount=${amount}&currency=${currency}`;
 
     // Simulate API delay

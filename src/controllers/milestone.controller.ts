@@ -32,9 +32,20 @@ export class MilestoneController {
       const projectId = getStringParam(req.query.projectId as any);
 
       if (!projectId) {
-        res.status(400).json({
-          success: false,
-          error: "Project ID is required",
+        // Allow fetching all milestones when no projectId is provided.
+        const {
+          milestones,
+          total,
+          page: currentPage,
+          pageSize: currentPageSize,
+        } = await milestoneService.findAll(req.userId!, undefined, page, pageSize);
+
+        res.status(200).json({
+          success: true,
+          data: milestones,
+          total,
+          page: currentPage,
+          pageSize: currentPageSize,
         });
         return;
       }

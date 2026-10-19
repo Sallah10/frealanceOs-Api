@@ -64,35 +64,103 @@ export class DashboardService {
         id: true,
         name: true,
         email: true,
+        company: true,
+        country: true,
+        phone: true,
         avatar: true,
+        totalBilled: true,
         createdAt: true,
       },
     });
 
-    // Get upcoming deadlines (next 7 days)
+    // Upcoming deadlines in the next 7 days: project deadlines, invoice due
+    // dates and milestone due dates, merged and sorted so the dashboard shows
+    // one honest list instead of only milestones.
     const nextWeek = new Date();
     nextWeek.setDate(nextWeek.getDate() + 7);
 
-    const upcomingDeadlines = await prisma.milestone.findMany({
+    const upcomingDeadlines: Array<{
+      id: string;
+      type: 'project' | 'invoice' | 'milestone';
+      title: string;
+      date: Date;
+      amount: number | null;
+      clientName: string;
+      isOverdue: boolean;
+    }> = [];
+
+    const projects = await prisma.project.findMany({
+      where: {
+        userId,
+        deadline: { gte: now, lte: nextWeek },
+        status: { not: 'completed' },
+      },
+      include: { client: { select: { name: true } } },
+      orderBy: { deadline: 'asc' },
+    });
+
+    for (const project of projects) {
+      if (!project.deadline) continue;
+      upcomingDeadlines.push({
+        id: project.id,
+        type: 'project',
+        title: project.name,
+        date: project.deadline,
+        amount: project.budget,
+        clientName: project.client.name,
+        isOverdue: false,
+      });
+    }
+
+    const overdueInvoicesArr = await prisma.invoice.findMany({
+      where: {
+        userId,
+        dueDate: { lte: nextWeek },
+        status: { in: ['draft', 'sent', 'overdue'] },
+      },
+      include: { client: { select: { name: true } } },
+      orderBy: { dueDate: 'asc' },
+    });
+
+    for (const invoice of overdueInvoicesArr) {
+      upcomingDeadlines.push({
+        id: invoice.id,
+        type: 'invoice',
+        title: `Invoice ${invoice.number}`,
+        date: invoice.dueDate,
+        amount: invoice.amount,
+        clientName: invoice.client.name,
+        isOverdue: invoice.dueDate < now,
+      });
+    }
+
+    const milestones = await prisma.milestone.findMany({
       where: {
         project: { userId },
-        dueDate: {
-          gte: now,
-          lte: nextWeek,
-        },
+        dueDate: { gte: now, lte: nextWeek },
         status: { not: 'completed' },
       },
       include: {
         project: {
-          select: {
-            id: true,
-            name: true,
-          },
+          select: { name: true, client: { select: { name: true } } },
         },
       },
       orderBy: { dueDate: 'asc' },
-      take: 10,
     });
+
+    for (const milestone of milestones) {
+      upcomingDeadlines.push({
+        id: milestone.id,
+        type: 'milestone',
+        title: milestone.name,
+        date: milestone.dueDate,
+        amount: milestone.amount,
+        clientName: milestone.project.client.name,
+        isOverdue: false,
+      });
+    }
+
+    upcomingDeadlines.sort((a, b) => a.date.getTime() - b.date.getTime());
 
     return {
       totalEarnings,
@@ -105,19 +173,13 @@ export class DashboardService {
       overdueInvoices: overdueInvoices.length,
       overdueInvoicesAmount,
       recentClients,
-      upcomingDeadlines: upcomingDeadlines.map(m => ({
-        id: m.id,
-        name: m.name,
-        projectName: m.project.name,
-        dueDate: m.dueDate,
-        amount: m.amount,
-      })),
+      upcomingDeadlines: upcomingDeadlines.slice(0, 10),
     };
   }
 
   async getEarnings(userId: string, period: 'monthly' | 'weekly' = 'monthly') {
     const now = new Date();
-    const earnings: Array<{ period: string; amount: number; date: Date }> = [];
+    const earnings: Array<{ month: string; amount: number; date: Date }> = [];
 
     if (period === 'monthly') {
       // Last 12 months
@@ -140,7 +202,7 @@ export class DashboardService {
         const amount = paidInvoices.reduce((sum, i) => sum + i.amount, 0);
         
         earnings.push({
-          period: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          month: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
           amount,
           date: startOfMonth,
         });
@@ -170,7 +232,7 @@ export class DashboardService {
         const amount = paidInvoices.reduce((sum, i) => sum + i.amount, 0);
         
         earnings.push({
-          period: `Week ${i + 1}`,
+          month: `Week of ${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
           amount,
           date: startOfWeek,
         });

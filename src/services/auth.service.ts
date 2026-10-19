@@ -2,7 +2,12 @@
 import { prisma } from '../config/database';
 import { hashPassword, comparePassword } from '../utils/bcrypt';
 import { generateToken } from '../utils/jwt';
-import { RegisterInput, LoginInput } from '../validators/auth.validator';
+import {
+  RegisterInput,
+  LoginInput,
+  UpdateProfileInput,
+  UpdatePasswordInput,
+} from '../validators/auth.validator';
 
 export class AuthService {
   async register(data: RegisterInput) {
@@ -83,5 +88,54 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileInput) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    return prisma.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        currency: true,
+        avatar: true,
+        timezone: true,
+        raenestAccountId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  async updatePassword(userId: string, data: UpdatePasswordInput) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isValidPassword = await comparePassword(
+      data.currentPassword,
+      user.password,
+    );
+
+    if (!isValidPassword) {
+      throw new Error('Current password is incorrect');
+    }
+
+    const hashedPassword = await hashPassword(data.newPassword);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
   }
 }

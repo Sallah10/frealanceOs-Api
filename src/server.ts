@@ -9,6 +9,10 @@ import routes from "./routes";
 
 export const app = express();
 
+// We sit behind Render's router, so express needs the X-Forwarded-* headers to
+// see the real client IP. Without this express-rate-limit refuses to run.
+app.set("trust proxy", 1);
+
 // Security middleware
 app.use(helmet());
 app.use(

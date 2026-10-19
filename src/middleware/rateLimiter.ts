@@ -12,3 +12,16 @@ export const limiter = rateLimit({
     error: 'Too many requests, please try again later.',
   },
 });
+
+// Login and register get their own, much tighter bucket so nobody can brute
+// force a password by hammering the same route a few hundred times.
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many login attempts, please try again in 15 minutes.',
+  },
+});

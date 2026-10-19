@@ -27,7 +27,7 @@
 
 ## Introduction
 
-FreelanceOS API is a RESTful backend built for African freelancers to manage clients, projects, invoices, and receive international payments via Raenest.
+FreelanceOS API is a RESTful backend built for African freelancers to manage clients, projects, and invoices, with link-shaped payment URLs for the Raenest checkout (Raenest API integration pending).
 
 Every endpoint follows a consistent response format. Protected routes require a JWT Bearer token.
 
@@ -51,7 +51,7 @@ Tokens expire after **7 days**. When a token expires, the client receives `401` 
 
 ## Response Format
 
-Every response — success or error — follows this shape:
+Every response - success or error - follows this shape:
 
 ```json
 // Success
@@ -236,7 +236,7 @@ List all clients for the authenticated user.
 }
 ```
 
-> `totalBilled` is computed from paid invoices — it is never stored directly and is always accurate.
+> `totalBilled` is computed from paid invoices - it is never stored directly and is always accurate.
 
 ---
 
@@ -284,7 +284,7 @@ Get a single client with their full project and invoice history.
 
 #### `PUT /clients/:id`
 
-Update a client. All fields are optional — only send what you want to change.
+Update a client. All fields are optional - only send what you want to change.
 
 **🔒 Authentication required.**
 
@@ -314,7 +314,7 @@ List all projects. Optional query parameters:
 
 **🔒 Authentication required.**
 
-Each project includes `milestoneProgress` — the percentage of milestones marked complete.
+Each project includes `milestoneProgress` - the percentage of milestones marked complete.
 
 ---
 
@@ -412,7 +412,7 @@ Create a new invoice. Invoice number is auto-generated in the format `INV-YYYY-N
   "dueDate": "2026-03-15T00:00:00Z",
   "items": [
     {
-      "description": "UI Design — Phase 1",
+      "description": "UI Design - Phase 1",
       "quantity": 1,
       "rate": 1500,
       "amount": 1500
@@ -458,7 +458,7 @@ Update an invoice.
 
 **🔒 Authentication required.**
 
-> Returns `409 Conflict` if the invoice status is `paid` — paid invoices are immutable for financial integrity.
+> Returns `409 Conflict` if the invoice status is `paid` - paid invoices are immutable for financial integrity.
 
 > Setting `status` to `"paid"` automatically records `paidAt` as the current timestamp.
 
@@ -470,13 +470,32 @@ Delete an invoice.
 
 **🔒 Authentication required.**
 
-> Returns `409 Conflict` if the invoice is `paid` — delete is blocked to preserve the audit trail. Use `status: "cancelled"` instead.
+> Returns `409 Conflict` if the invoice is `paid` - delete is blocked to preserve the audit trail. Use `status: "cancelled"` instead.
 
 ---
 
 #### `POST /invoices/:id/send`
 
-Mark an invoice as sent, email the client, and return a Raenest payment link.
+Move a `draft` invoice to `sent`.
+
+**🔒 Authentication required.**
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": { "...updated invoice with status: sent..." }
+}
+```
+
+> Only `draft` invoices can be sent (`400` otherwise). No email is sent yet and no payment link is created here - use the payment-link endpoint below.
+
+---
+
+#### `POST /invoices/:id/payment-link`
+
+Build and persist a payment link for the invoice.
 
 **🔒 Authentication required.**
 
@@ -486,15 +505,13 @@ Mark an invoice as sent, email the client, and return a Raenest payment link.
 {
   "success": true,
   "data": {
-    "invoice": { "...updated invoice with status: sent..." },
-    "paymentLink": "https://pay.raenest.com/fos-clx123abc",
-    "emailSent": true,
-    "emailWarning": "Optional — present if email delivery failed or RESEND_API_KEY not set"
+    "paymentLink": "https://pay.raenest.com/freelanceos/cmvd0abc000000000000inv1?amount=2250&currency=USD",
+    "link": "https://pay.raenest.com/freelanceos/cmvd0abc000000000000inv1?amount=2250&currency=USD"
   }
 }
 ```
 
-> If `RESEND_API_KEY` is not configured, the invoice is still marked as sent and the payment link is still generated — only the email step is skipped. The `emailWarning` field in the response will explain this.
+> The URL is link-shaped but **not a working checkout**: the Raenest API is not called yet (no API keys). Both `paymentLink` and `link` hold the same value - the frontend reads either.
 
 ---
 
@@ -525,7 +542,7 @@ Create a milestone.
 ```json
 {
   "projectId": "clx...",
-  "name": "Design Phase — Wireframes",
+  "name": "Design Phase - Wireframes",
   "description": "Deliver all Figma screens for review",
   "amount": 1500,
   "status": "pending",
@@ -582,7 +599,7 @@ Create a proposal.
 ```json
 {
   "clientId": "clx...",
-  "title": "API Integration Suite — Project Proposal",
+  "title": "API Integration Suite - Project Proposal",
   "content": "This proposal outlines...",
   "amount": 3500,
   "currency": "USD",
@@ -618,7 +635,7 @@ Delete a proposal.
 
 #### `GET /dashboard/stats`
 
-Returns all KPIs needed for the main dashboard. All queries run in parallel — single round trip.
+Returns all KPIs needed for the main dashboard. All queries run in parallel - single round trip.
 
 **🔒 Authentication required.**
 
@@ -661,9 +678,9 @@ Returns all KPIs needed for the main dashboard. All queries run in parallel — 
 
 **Field notes:**
 
-- `earningsGrowth` — percentage change vs previous month. Returns `100` if last month was `0` and this month is positive. Returns `0` if both months are `0`.
-- `overdueInvoices` — union of invoices explicitly marked `overdue` AND invoices with `status: "sent"` where `dueDate` is in the past.
-- `upcomingDeadlines` — next 5 items across projects, invoices, and milestones sorted by date ascending.
+- `earningsGrowth` - percentage change vs previous month. Returns `100` if last month was `0` and this month is positive. Returns `0` if both months are `0`.
+- `overdueInvoices` - union of invoices explicitly marked `overdue` AND invoices with `status: "sent"` where `dueDate` is in the past.
+- `upcomingDeadlines` - next 5 items across projects, invoices, and milestones sorted by date ascending.
 
 ---
 
@@ -699,7 +716,7 @@ Earnings chart data broken down by period.
 
 #### `GET /dashboard/activity`
 
-Recent activity feed — last 20 events across invoices, projects, clients, and milestones, sorted by most recent first.
+Recent activity feed - last 20 events across invoices, projects, clients, and milestones, sorted by most recent first.
 
 **🔒 Authentication required.**
 
@@ -743,25 +760,26 @@ Recent activity feed — last 20 events across invoices, projects, clients, and 
 | `403` | Forbidden             | Authenticated but accessing another user's data                |
 | `404` | Not Found             | Resource doesn't exist or belongs to a different user          |
 | `409` | Conflict              | Editing a paid invoice, deleting a client with active projects |
-| `429` | Too Many Requests     | Rate limit exceeded — wait and retry                           |
-| `500` | Internal Server Error | Something broke server-side — check logs                       |
+| `429` | Too Many Requests     | Rate limit exceeded - wait and retry                           |
+| `500` | Internal Server Error | Something broke server-side - check logs                       |
 
 ---
 
 ## Environment Variables
 
-| Variable           | Required | Default                   | Description                                                 |
-| ------------------ | -------- | ------------------------- | ----------------------------------------------------------- |
-| `DATABASE_URL`     | ✅       | —                         | PostgreSQL connection string                                |
-| `JWT_SECRET`       | ✅       | —                         | Token signing key — generate with `openssl rand -base64 64` |
-| `JWT_EXPIRES_IN`   | ❌       | `7d`                      | Token expiry                                                |
-| `ALLOWED_ORIGIN`   | ✅       | —                         | Frontend URL for CORS                                       |
-| `PORT`             | ❌       | `5000`                    | Server port                                                 |
-| `NODE_ENV`         | ❌       | `development`             | `development` or `production`                               |
-| `RESEND_API_KEY`   | ❌       | —                         | [resend.com](https://resend.com) API key for invoice emails |
-| `FROM_EMAIL`       | ❌       | `onboarding@resend.dev`   | Sender email address                                        |
-| `FROM_NAME`        | ❌       | `FreelanceOS`             | Sender display name                                         |
-| `RAENEST_BASE_URL` | ❌       | `https://pay.raenest.com` | Payment link base URL                                       |
+| Variable                  | Required | Default                   | Description                                                 |
+| ------------------------- | -------- | ------------------------- | ----------------------------------------------------------- |
+| `DATABASE_URL`            | ✅       | -                         | PostgreSQL connection string                                |
+| `JWT_SECRET`              | ✅       | -                         | Token signing key - min 32 chars                            |
+| `PORT`                    | ❌       | `5000`                    | Server port                                                 |
+| `NODE_ENV`                | ❌       | `development`             | `development` or `production`                               |
+| `FRONTEND_URL`            | ❌       | `http://localhost:3000`   | CORS allowed origin                                         |
+| `RATE_LIMIT_WINDOW_MS`    | ❌       | `900000`                  | Global rate limit window (15 min)                           |
+| `RATE_LIMIT_MAX_REQUESTS` | ❌       | `100`                     | Global requests per window per IP                           |
+| `RAENEST_API_KEY`         | ❌       | -                         | Reserved - Raenest is not called yet                        |
+| `RAENEST_API_URL`         | ❌       | `https://api.raenest.com/v1` | Reserved - payment links are stubbed                      |
+
+> Tokens expire after 7 days (`expiresIn: '7d'` in `src/utils/jwt.ts`).
 
 ### Generate JWT_SECRET
 
@@ -778,4 +796,4 @@ node -e "console.log(require('crypto').randomBytes(64).toString('base64'))"
 
 ---
 
-_Built for the [DevCareer × Raenest Hackathon 2026](https://devcareer.io) · Questions? Open an issue on [GitHub](#)_
+_Questions? Open an issue on [GitHub](https://github.com/Sallah10/frealanceOs-Api/issues)._

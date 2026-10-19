@@ -31,19 +31,19 @@ It handles authentication, client/project/invoice/proposal management, dashboard
 
 ## Tech Stack
 
-| Technology | Purpose |
-|---|---|
-| **Node.js 20+** | Runtime |
-| **Express 4.21** | HTTP framework |
-| **TypeScript 5.0** | Type safety throughout |
-| **Prisma 5.22** | ORM — type-safe database queries |
-| **PostgreSQL (Neon)** | Primary database |
-| **JWT** | Authentication — 7-day tokens |
-| **bcryptjs** | Password hashing |
-| **Zod** | Request validation via validators |
-| **Helmet 7** | Security headers |
-| **express-rate-limit** | Rate limiting |
-| **ESLint + Prettier** | Code quality |
+| Technology             | Purpose                           |
+| ---------------------- | --------------------------------- |
+| **Node.js 20+**        | Runtime                           |
+| **Express 4.21**       | HTTP framework                    |
+| **TypeScript 5.0**     | Type safety throughout            |
+| **Prisma 5.22**        | ORM - type-safe database queries  |
+| **PostgreSQL (Neon)**  | Primary database                  |
+| **JWT**                | Authentication - 7-day tokens     |
+| **bcryptjs**           | Password hashing                  |
+| **Zod**                | Request validation via validators |
+| **Helmet 7**           | Security headers                  |
+| **express-rate-limit** | Rate limiting                     |
+| **ESLint + Prettier**  | Code quality                      |
 
 ---
 
@@ -53,11 +53,11 @@ It handles authentication, client/project/invoice/proposal management, dashboard
 freelanceos-backend/
 ├── prisma/
 │   ├── migrations/            # Database migration history
-│   ├── schema.prisma          # DB schema — models, enums, relations
+│   ├── schema.prisma          # DB schema - models, enums, relations
 │   └── seed.ts                # Demo data seeder
 ├── src/
-│   ├── index.ts               # Entry point — DB connect + server start
-│   ├── server.ts              # Express app — middleware + route wiring
+│   ├── index.ts               # Entry point - DB connect + server start
+│   ├── server.ts              # Express app - middleware + route wiring
 │   ├── config/
 │   │   ├── database.ts        # Prisma client singleton
 │   │   └── env.ts             # Environment variable validation
@@ -114,6 +114,7 @@ cp .env.example .env
 Open `.env` and fill in your values - see [Environment Variables](#environment-variables) below for what each one does.
 
 **Generate a JWT secret:**
+
 ```bash
 # macOS / Linux / Git Bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
@@ -128,7 +129,7 @@ openssl rand -hex 48
 ### 3. Set up the database
 
 ```bash
-# Run migrations — creates all tables
+# Run migrations - creates all tables
 npm run db:migrate
 
 # Load demo data
@@ -160,7 +161,7 @@ curl -X POST http://localhost:5000/api/v1/auth/login \
   -d '{"email":"demo@freelanceos.dev","password":"Demo@12345"}'
 ```
 
-Save the `token` from the login response — pass it as `Authorization: Bearer <token>` on all protected routes.
+Save the `token` from the login response - pass it as `Authorization: Bearer <token>` on all protected routes.
 
 ---
 
@@ -169,6 +170,7 @@ Save the `token` from the login response — pass it as `Authorization: Bearer <
 All endpoints are prefixed with `/api/v1`. Full interactive docs at [freelance-os-ten.vercel.app/docs](https://freelance-os-ten.vercel.app/docs).
 
 Every response follows:
+
 ```json
 { "success": true, "data": {} }
 { "success": false, "error": "Human-readable message" }
@@ -176,86 +178,86 @@ Every response follows:
 
 ### Auth
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `POST` | `/auth/register` | ❌ | Create account |
-| `POST` | `/auth/login` | ❌ | Login → returns JWT |
-| `GET` | `/auth/me` | ✅ | Get current user |
+| Method | Endpoint         | Auth | Description         |
+| ------ | ---------------- | ---- | ------------------- |
+| `POST` | `/auth/register` | ❌   | Create account      |
+| `POST` | `/auth/login`    | ❌   | Login → returns JWT |
+| `GET`  | `/auth/me`       | ✅   | Get current user    |
 
 ### Clients
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/clients` | ✅ | List all clients |
-| `POST` | `/clients` | ✅ | Create a client |
-| `GET` | `/clients/:id` | ✅ | Get one client |
-| `PUT` | `/clients/:id` | ✅ | Update a client |
-| `DELETE` | `/clients/:id` | ✅ | Delete a client |
+| Method   | Endpoint       | Auth | Description      |
+| -------- | -------------- | ---- | ---------------- |
+| `GET`    | `/clients`     | ✅   | List all clients |
+| `POST`   | `/clients`     | ✅   | Create a client  |
+| `GET`    | `/clients/:id` | ✅   | Get one client   |
+| `PUT`    | `/clients/:id` | ✅   | Update a client  |
+| `DELETE` | `/clients/:id` | ✅   | Delete a client  |
 
 ### Projects
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/projects` | ✅ | List projects (`?status=active`) |
-| `POST` | `/projects` | ✅ | Create a project |
-| `GET` | `/projects/:id` | ✅ | Get one project |
-| `PUT` | `/projects/:id` | ✅ | Update a project |
-| `DELETE` | `/projects/:id` | ✅ | Delete a project |
+| Method   | Endpoint        | Auth | Description                      |
+| -------- | --------------- | ---- | -------------------------------- |
+| `GET`    | `/projects`     | ✅   | List projects (`?status=active`) |
+| `POST`   | `/projects`     | ✅   | Create a project                 |
+| `GET`    | `/projects/:id` | ✅   | Get one project                  |
+| `PUT`    | `/projects/:id` | ✅   | Update a project                 |
+| `DELETE` | `/projects/:id` | ✅   | Delete a project                 |
 
 ### Invoices
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/invoices` | ✅ | List invoices (`?status=overdue`) |
-| `POST` | `/invoices` | ✅ | Create invoice (auto-numbered) |
-| `GET` | `/invoices/:id` | ✅ | Get one invoice |
-| `PUT` | `/invoices/:id` | ✅ | Update invoice |
-| `DELETE` | `/invoices/:id` | ✅ | Delete invoice |
-| `POST` | `/invoices/:id/send` | ✅ | Mark as sent + generate Raenest link |
-| `POST` | `/invoices/:id/mark-paid` | ✅ | Mark as paid |
-| `POST` | `/invoices/:id/payment-link` | ✅ | Generate Raenest payment link |
+| Method   | Endpoint                     | Auth | Description                          |
+| -------- | ---------------------------- | ---- | ------------------------------------ |
+| `GET`    | `/invoices`                  | ✅   | List invoices (`?status=overdue`)    |
+| `POST`   | `/invoices`                  | ✅   | Create invoice (auto-numbered)       |
+| `GET`    | `/invoices/:id`              | ✅   | Get one invoice                      |
+| `PUT`    | `/invoices/:id`              | ✅   | Update invoice                       |
+| `DELETE` | `/invoices/:id`              | ✅   | Delete invoice                       |
+| `POST`   | `/invoices/:id/send`         | ✅   | Mark as sent + build payment link    |
+| `POST`   | `/invoices/:id/mark-paid`    | ✅   | Mark as paid                         |
+| `POST`   | `/invoices/:id/payment-link` | ✅   | Build payment link (placeholder URL) |
 
 ### Milestones
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/milestones` | ✅ | List milestones (`?projectId=...`) |
-| `POST` | `/milestones` | ✅ | Create a milestone |
-| `PUT` | `/milestones/:id` | ✅ | Update a milestone |
-| `DELETE` | `/milestones/:id` | ✅ | Delete a milestone |
+| Method   | Endpoint          | Auth | Description                        |
+| -------- | ----------------- | ---- | ---------------------------------- |
+| `GET`    | `/milestones`     | ✅   | List milestones (`?projectId=...`) |
+| `POST`   | `/milestones`     | ✅   | Create a milestone                 |
+| `PUT`    | `/milestones/:id` | ✅   | Update a milestone                 |
+| `DELETE` | `/milestones/:id` | ✅   | Delete a milestone                 |
 
 ### Proposals
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/proposals` | ✅ | List proposals |
-| `POST` | `/proposals` | ✅ | Create a proposal |
-| `PUT` | `/proposals/:id` | ✅ | Update a proposal |
-| `DELETE` | `/proposals/:id` | ✅ | Delete a proposal |
+| Method   | Endpoint         | Auth | Description       |
+| -------- | ---------------- | ---- | ----------------- |
+| `GET`    | `/proposals`     | ✅   | List proposals    |
+| `POST`   | `/proposals`     | ✅   | Create a proposal |
+| `PUT`    | `/proposals/:id` | ✅   | Update a proposal |
+| `DELETE` | `/proposals/:id` | ✅   | Delete a proposal |
 
 ### Dashboard
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| `GET` | `/dashboard/stats` | ✅ | All KPIs - earnings, projects, invoices |
-| `GET` | `/dashboard/earnings` | ✅ | Chart data (`?period=monthly\|weekly`) |
-| `GET` | `/dashboard/activity` | ✅ | Recent activity feed |
+| Method | Endpoint              | Auth | Description                             |
+| ------ | --------------------- | ---- | --------------------------------------- |
+| `GET`  | `/dashboard/stats`    | ✅   | All KPIs - earnings, projects, invoices |
+| `GET`  | `/dashboard/earnings` | ✅   | Chart data (`?period=monthly\|weekly`)  |
+| `GET`  | `/dashboard/activity` | ✅   | Recent activity feed                    |
 
 ---
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `DATABASE_URL` | ✅ | — | Neon PostgreSQL connection string |
-| `JWT_SECRET` | ✅ | — | Token signing key - min 32 chars |
-| `PORT` | ❌ | `5000` | Server port |
-| `NODE_ENV` | ❌ | `development` | `development` or `production` |
-| `FRONTEND_URL` | ❌ | `http://localhost:3000` | CORS allowed origin |
-| `RATE_LIMIT_WINDOW_MS` | ❌ | `900000` | Rate limit window (default 15 min) |
-| `RATE_LIMIT_MAX_REQUESTS` | ❌ | `100` | Max requests per window per IP |
-| `RAENEST_API_KEY` | ❌ | — | Raenest API key (future integration) |
-| `RAENEST_API_URL` | ❌ | `https://api.raenest.com/v1` | Raenest API endpoint |
+| Variable                  | Required | Default                      | Description                          |
+| ------------------------- | -------- | ---------------------------- | ------------------------------------ |
+| `DATABASE_URL`            | ✅       | -                            | Neon PostgreSQL connection string    |
+| `JWT_SECRET`              | ✅       | -                            | Token signing key - min 32 chars     |
+| `PORT`                    | ❌       | `5000`                       | Server port                          |
+| `NODE_ENV`                | ❌       | `development`                | `development` or `production`        |
+| `FRONTEND_URL`            | ❌       | `http://localhost:3000`      | CORS allowed origin                  |
+| `RATE_LIMIT_WINDOW_MS`    | ❌       | `900000`                     | Rate limit window (default 15 min)   |
+| `RATE_LIMIT_MAX_REQUESTS` | ❌       | `100`                        | Max requests per window per IP       |
+| `RAENEST_API_KEY`         | ❌       | -                            | Reserved - Raenest is not called yet |
+| `RAENEST_API_URL`         | ❌       | `https://api.raenest.com/v1` | Reserved - payment links are stubbed |
 
 ---
 
@@ -267,7 +269,7 @@ Every response follows:
 
 **Zod validation before DB access** - All request bodies pass through validators before reaching controllers. Unknown fields are stripped. Invalid types are rejected with a `400` and a clear error message.
 
-**Rate limiting** - `express-rate-limit` applies 100 requests per 15 minutes per IP globally. Configurable via `RATE_LIMIT_WINDOW_MS` and `RATE_LIMIT_MAX_REQUESTS` in `.env`.
+**Rate limiting** - `express-rate-limit` applies 100 requests per 15 minutes per IP globally, configurable via `RATE_LIMIT_WINDOW_MS` and `RATE_LIMIT_MAX_REQUESTS` in `.env`. `/auth/login` and `/auth/register` get a separate, stricter limiter: 10 requests per 15 minutes per IP.
 
 **Helmet** - Sets security headers on every response, including XSS protection, clickjacking prevention, and MIME-type sniffing protection.
 
@@ -279,31 +281,31 @@ Every response follows:
 
 ## Error Codes
 
-| Code | Meaning |
-|---|---|
-| `400` | Bad Request - validation failed, missing required field |
-| `401` | Unauthorised - missing or invalid JWT |
+| Code  | Meaning                                                     |
+| ----- | ----------------------------------------------------------- |
+| `400` | Bad Request - validation failed, missing required field     |
+| `401` | Unauthorised - missing or invalid JWT                       |
 | `403` | Forbidden - authenticated but accessing another user's data |
-| `404` | Not Found - resource doesn't exist |
-| `409` | Conflict - e.g. deleting a client with active projects |
-| `429` | Too Many Requests - rate limit hit |
-| `500` | Internal Server Error - check server logs |
+| `404` | Not Found - resource doesn't exist                          |
+| `409` | Conflict - e.g. deleting a client with active projects      |
+| `429` | Too Many Requests - rate limit hit                          |
+| `500` | Internal Server Error - check server logs                   |
 
 ---
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Dev server with hot reload via `tsx watch` |
-| `npm run build` | Compile TypeScript → `dist/` |
-| `npm start` | Run compiled production build |
-| `npm run db:migrate` | Run Prisma migrations |
-| `npm run db:seed` | Load demo data via `ts-node` |
-| `npm run db:studio` | Open Prisma Studio - visual DB browser |
+| Command               | Description                                   |
+| --------------------- | --------------------------------------------- |
+| `npm run dev`         | Dev server with hot reload via `tsx watch`    |
+| `npm run build`       | Compile TypeScript → `dist/`                  |
+| `npm start`           | Run compiled production build                 |
+| `npm run db:migrate`  | Run Prisma migrations                         |
+| `npm run db:seed`     | Load demo data via `tsx`                     |
+| `npm run db:studio`   | Open Prisma Studio - visual DB browser        |
 | `npm run db:generate` | Regenerate Prisma client after schema changes |
-| `npm run lint` | Run ESLint across `src/` |
-| `npm run format` | Format all files with Prettier |
+| `npm run lint`        | Run ESLint across `src/`                      |
+| `npm run format`      | Format all files with Prettier                |
 
 ---
 
@@ -354,6 +356,7 @@ Run `npm run db:generate`. This happens if `postinstall` didn't run or the schem
 Generate a new one using the command in Step 2 above.
 
 **Port already in use**
+
 ```bash
 # macOS / Linux
 lsof -ti:5000 | xargs kill -9

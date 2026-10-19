@@ -5,7 +5,7 @@ import { RaenestService } from "../services/raenest.service";
 import { getNumberParam, getStringParam } from "../utils/request-helpers";
 
 const invoiceService = new InvoiceService();
-const raenestService = new RaenestService();
+new RaenestService();
 
 export class InvoiceController {
   async create(req: AuthRequest, res: Response): Promise<void> {
@@ -207,16 +207,11 @@ export class InvoiceController {
         });
         return;
       }
-      const invoice = await invoiceService.findOne(req.userId!, id);
-      const paymentLink = await raenestService.generatePaymentLink(
-        invoice.id,
-        invoice.amount,
-        invoice.currency,
-      );
+      const paymentLink = await invoiceService.generatePaymentLink(req.userId!, id);
 
       res.status(200).json({
         success: true,
-        data: { paymentLink },
+        data: { paymentLink, link: paymentLink },
       });
     } catch (error) {
       if (error instanceof Error) {

@@ -3,10 +3,35 @@ import { prisma } from '../config/database';
 import { CreateInvoiceInput, UpdateInvoiceInput } from '../validators/invoice.validator';
 
 export class InvoiceService {
-  private generateInvoiceNumber(): string {
+  // Sequential per-year numbers: INV-2026-001, INV-2026-002, ... A random
+  // suffix can collide, and a collision fails the whole create because
+  // `number` is unique.
+  private async generateInvoiceNumber(): Promise<string> {
     const year = new Date().getFullYear();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `INV-${year}-${random}`;
+    const prefix = `INV-${year}-`;
+
+    const last = await prisma.invoice.findFirst({
+      where: { number: { startsWith: prefix } },
+      orderBy: { number: 'desc' },
+      select: { number: true },
+    });
+
+    const lastSequence = last ? parseInt(last.number.slice(prefix.length), 10) : 0;
+    let sequence = Number.isNaN(lastSequence) ? 0 : lastSequence;
+
+    // The unique index is the real guard here - if something else took the
+    // number between the read and the write, we move on to the next one.
+    for (let attempt = 0; attempt < 100; attempt++) {
+      sequence += 1;
+      const candidate = `${prefix}${String(sequence).padStart(3, '0')}`;
+      const taken = await prisma.invoice.findUnique({
+        where: { number: candidate },
+        select: { id: true },
+      });
+      if (!taken) return candidate;
+    }
+
+    throw new Error('Could not allocate an invoice number');
   }
 
   async create(userId: string, data: CreateInvoiceInput) {
@@ -30,8 +55,8 @@ export class InvoiceService {
       }
     }
 
-    const invoiceNumber = this.generateInvoiceNumber();
-    
+    const invoiceNumber = await this.generateInvoiceNumber();
+
     // Calculate amount with tax
     const taxAmount = data.amount * (data.taxRate || 0) / 100;
     const totalAmount = data.amount + taxAmount;
@@ -42,7 +67,6 @@ export class InvoiceService {
         userId,
         number: invoiceNumber,
         amount: totalAmount,
-        items: JSON.stringify(data.items),
       },
       include: {
         client: true,
@@ -116,6 +140,27 @@ export class InvoiceService {
     
     if (invoice.status === 'paid') {
       throw new Error('Cannot update a paid invoice');
+    }
+
+    // Re-pointing an invoice at someone else's client or project is an IDOR:
+    // findOne() proves the invoice is ours, not the new target.
+    if (data.clientId) {
+      const client = await prisma.client.findFirst({
+        where: { id: data.clientId, userId },
+      });
+      if (!client) throw new Error('Client not found');
+    }
+
+    if (data.projectId) {
+      const project = await prisma.project.findFirst({
+        where: { id: data.projectId, userId },
+      });
+      if (!project) throw new Error('Project not found');
+    }
+
+    const incomingStatus = data.status as string | undefined;
+    if (incomingStatus === 'paid') {
+      throw new Error('Use the mark-as-paid endpoint to record a payment');
     }
 
     return prisma.invoice.update({
@@ -198,15 +243,15 @@ export class InvoiceService {
 
   async generatePaymentLink(userId: string, id: string): Promise<string> {
     const invoice = await this.findOne(userId, id);
-    
+
     // Mock payment link - replace with actual Raenest integration
     const paymentLink = `https://pay.raenest.com/freelanceos/${invoice.id}`;
-    
+
     await prisma.invoice.update({
       where: { id },
       data: { paymentLink },
     });
-    
+
     return paymentLink;
   }
 }

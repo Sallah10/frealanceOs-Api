@@ -18,7 +18,11 @@ export const createInvoiceSchema = z.object({
   taxRate: z.number().min(0).max(100).default(0),
 });
 
-export const updateInvoiceSchema = createInvoiceSchema.partial();
+export const updateInvoiceSchema = createInvoiceSchema.partial().extend({
+  // Only these transitions are allowed through the generic PUT - paid and
+  // sent have their own endpoints with side effects.
+  status: z.enum(['draft', 'sent', 'overdue']).optional(),
+});
 
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 export type UpdateInvoiceInput = z.infer<typeof updateInvoiceSchema>;
