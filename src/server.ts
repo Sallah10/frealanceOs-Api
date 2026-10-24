@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import morgan from "morgan";
 import { env } from "./config/env";
 import { limiter } from "./middleware/rateLimiter";
 import { errorHandler } from "./middleware/errorHandler";
@@ -22,6 +23,10 @@ app.use(
     optionsSuccessStatus: 200,
   }),
 );
+
+if (env.NODE_ENV !== "production") {
+  app.use(morgan("dev"));
+}
 
 // Rate limiting
 app.use(limiter);
